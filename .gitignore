@@ -1,0 +1,265 @@
+# Python Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+_temp/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
+
+# Vue.js / Frontend
+.DS_Store
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Element UI specific
+lib/
+packages/
+examples/
+test/
+
+# Local env files
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-project
+*.sublime-workspace
+
+# IDE - PyCharm
+*.iml
+*.iws
+.idea_modules/
+
+# IDE - Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Logs
+logs/
+*.log
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Generated documentation
+docs/
+swagger.json
+api.md
+
+# Testing
+coverage/
+.coverage
+.tox/
+.pytest_cache/
+htmlcov/
+test/unit/coverage
+test/e2e/reports
+selenium-debug.log
+
+# Temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Project specific
+backend/static/uploads/
+backend/media/
+backend/config.local.py
+frontend/user/dist/
+frontend/admin/dist/
+
+# Vue build generated files
+.cache/
+dist/
+public/
+static/
+
+# Vue dev server
+.hot-update.js
+.hot-update.json
+
+# Vue Router
+router.js.map
+
+# Vuex
+vuex.js.map
+
+# Element UI theme
+theme/
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.env
+*.env.*
+!.env.example
+
+# Cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Local development
+docker-compose.override.yml
+docker-compose.local.yml
+local_settings.py
+
+# System Files
+.directory
+desktop.ini
+
+# Frontend build directories
+frontend/*/dist/
+frontend/*/node_modules/
+
+# Frontend cache
+frontend/*/.cache/
+frontend/*/.temp/
+
+# Frontend test
+frontend/*/coverage/
+frontend/*/test/unit/coverage/
+frontend/*/test/e2e/reports/
+
+# Frontend editor
+frontend/*/.idea/
+frontend/*/.vscode/
+
+# Frontend logs
+frontend/*/npm-debug.log*
+frontend/*/yarn-debug.log*
+frontend/*/yarn-error.log*
+
+# Frontend local env files
+frontend/*/.env.local
+frontend/*/.env.*.local
+
+# Frontend package managers
+frontend/*/package-lock.json
+frontend/*/yarn.lock
+
+# Frontend OS generated files
+frontend/*/.DS_Store
+frontend/*/Thumbs.db
+
+# FastAPI / Uvicorn specific
+*.pid
+app.sock
+
+# Application runtime
+instance/
+logs/
+*.log
+.uvicorn.log
+
+# Config overrides (keep example, ignore local)
+config.local.yml
+config.*.yml
+!config.yml
+
+# Test artifacts
+test-results/
+test-reports/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Data and uploads
+app/data/
+app/uploads/
+app/media/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Conda environment
+conda-env.yml
+.conda/
+
+# IDE specific for FastAPI development
+.pylintrc
+.flake8
+.mypy.ini
+setup.cfg
+pytest.ini
+
+# Temporary development files
+*.tmp
+*.bak
+debug/
+tmp/
+temp/
+
+# API documentation cache
+.swagger_cache/
+openapi-cache/
+
+# Dependency lock files (if using Poetry or Pipenv)
+poetry.lock
+Pipfile.lock
+
+# Model and large files
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.weights
+*.model
+
+# Old project reference (keep for documentation, ignore runtime)
+0-saas-center/backend/**/__pycache__/
+0-saas-center/backend/**/*.pyc
+0-saas-center/backend/**/node_modules/
+0-saas-center/backend/**/dist/

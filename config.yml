@@ -1,0 +1,25 @@
+# Top-level configuration file. Values here override defaults in
+# `0-saas-center/backend/api_center/config.py` when present.
+
+SECRET_KEY: "change-me-in-prod"
+JWT_SECRET_KEY: "change-me-in-prod-jwt"
+
+# Database
+MYSQL_HOST: "127.0.0.1"
+MYSQL_USER: "root"
+MYSQL_PASSWORD: "123456"
+MYSQL_DATABASE: "api_platform"
+
+# API rate / costs
+POINT_RATE: 100
+API_COSTS:
+  chat: 1
+  genimg: 5
+  tts: 2
+  asr: 2
+  ocr: 2
+
+# Application
+HOST: "0.0.0.0"
+PORT: 5001
+DEBUG: true
