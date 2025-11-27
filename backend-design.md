@@ -1,0 +1,2 @@
+现有app目录保留。后端项目重新生成一个到backend目录，具体功能读一下 quickpush_参考(这个是我另外一个完整项目，不要动这个目录内容，只读取参考就行) 目录下的backend功能，这个里面的.md文件，可以让你了解quickpush的功能。
+这里的小程序文案模块，使用quickpush的接口，主要是quicpush中分享相关部分。小程序首页使用列表接口，详情页面需要模拟 quickpush的frontend网页前端的/res/share ，通过参数传递文案内容和图片列表。
