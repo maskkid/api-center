@@ -1,0 +1,201 @@
+/* 图片拼接工具样式 */
+.container {
+  padding: 32rpx;
+  padding-bottom: 100rpx;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.desc {
+  font-size: 28rpx;
+  color: #888;
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  color: #333;
+}
+
+/* 模板选择器 */
+.template-selector {
+  margin-bottom: 32rpx;
+}
+
+.template-scroll {
+  height: 240rpx;
+}
+
+.template-list {
+  display: flex;
+  gap: 16rpx;
+  padding: 0 8rpx 20rpx;
+}
+
+.template-item {
+  flex-shrink: 0;
+  width: 140rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 16rpx;
+  border: 3rpx solid #e0e0e0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.template-item.active {
+  border-color: #0052d9;
+  background: #f0f7ff;
+  box-shadow: 0 4rpx 16rpx rgba(0, 82, 217, 0.2);
+  transform: translateY(-2rpx);
+}
+
+.template-preview {
+  width: 100rpx;
+  height: 100rpx;
+  margin: 0 auto 12rpx;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.template-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 2rpx;
+  background: #e0e0e0;
+  padding: 2rpx;
+  border-radius: 6rpx;
+}
+
+.template-cell {
+  background: #ffffff;
+  border-radius: 2rpx;
+  transition: all 0.2s ease;
+}
+
+.template-cell.trapezoid {
+  border-radius: 6rpx 6rpx 2rpx 2rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.template-cell.triangle {
+  border-radius: 6rpx;
+  background: linear-gradient(45deg, #ffffff 0%, #f0f0f0 100%);
+}
+
+.template-name {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #666;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.template-item.active .template-name {
+  color: #0052d9;
+  font-weight: 600;
+}
+
+/* 图片编辑区域 */
+.editor-area {
+  margin-bottom: 32rpx;
+}
+
+.image-grid {
+  display: grid;
+  width: 100%;
+  height: 600rpx;
+  gap: 8rpx;
+  background: #f0f0f0;
+  padding: 8rpx;
+  border-radius: 12rpx;
+}
+
+.image-cell {
+  position: relative;
+  background: #fff;
+  border: 2rpx dashed #ddd;
+  border-radius: 8rpx;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.image-cell.has-image {
+  border: none;
+}
+
+.image-cell.dragging {
+  opacity: 0.7;
+  transform: scale(1.05);
+  z-index: 100;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder-text {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.uploaded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  margin-bottom: 32rpx;
+}
+
+/* 预览区域 */
+.preview-area {
+  background: #f8f8f8;
+  padding: 32rpx;
+  border-radius: 12rpx;
+}
+
+.preview-image {
+  width: 100%;
+  border-radius: 8rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 隐藏的 canvas */
+#collage-canvas {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 1080px;
+  height: 1080px;
+}

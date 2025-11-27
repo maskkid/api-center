@@ -1,0 +1,16 @@
+<view class="container">
+  <view class="title">工具箱</view>
+  <t-cell-group>
+    <block wx:for="{{modules}}" wx:key="tag">
+      <t-cell
+        title="{{item.name}}"
+        hover
+        arrow
+        bind:click="onEnterModule"
+        data-tag="{{item.tag}}"
+      >
+        <t-icon slot="left-icon" name="{{item.icon}}" />
+      </t-cell>
+    </block>
+  </t-cell-group>
+</view>

@@ -1,0 +1,22 @@
+<view class="container">
+  <block wx:for="{{items}}" wx:key="id">
+    <view class="wenan-card">
+      <view>{{item.text}}</view>
+      <view class="image-grid">
+        <block wx:for="{{item.images}}" wx:key="src">
+          <image src="{{item}}" mode="aspectFill" bind:tap="onPreviewImage" data-src="{{item}}" />
+        </block>
+      </view>
+      <view class="actions">
+        <t-button
+          t-class="action-button"
+          variant="text"
+          icon="download"
+          bind:tap="onOneClickDownload"
+          data-text="{{item.text}}"
+          data-images="{{item.images}}"
+        >一键下载</t-button>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,97 @@
+<view class="container">
+  <view class="title">图片拼接工具</view>
+  <view class="desc">选择模板，上传图片，一键拼接</view>
+  
+  <!-- 模板选择器 -->
+  <view class="template-selector">
+    <view class="section-title">选择模板</view>
+    <scroll-view scroll-x class="template-scroll">
+      <view class="template-list">
+        <view 
+          class="template-item {{selectedTemplate.id === template.id ? 'active' : ''}}" 
+          wx:for="{{templates}}" 
+          wx:key="id"
+          bind:tap="selectTemplate"
+          data-template="{{item}}"
+        >
+          <view class="template-preview">
+            <view class="template-grid" style="grid-template-columns: repeat({{item.cols}}, 1fr); grid-template-rows: repeat({{item.rows}}, 1fr);">
+                      <view 
+                        class="template-cell {{item.id === 5 ? 'trapezoid' : ''}} {{item.id === 4 ? 'triangle' : ''}}" 
+                        wx:for="{{item.cells}}" 
+                        wx:for-item="cell"
+                        wx:key="index"
+                        style="grid-column: {{cell.col}}; grid-row: {{cell.row}}; grid-column-end: span {{cell.colSpan}}; grid-row-end: span {{cell.rowSpan}};"
+                      ></view>
+                    </view>
+          </view>
+          <text class="template-name">{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 图片编辑区域 -->
+  <view class="editor-area" wx:if="{{selectedTemplate.id}}">
+    <view class="section-title">上传图片（可拖拽调整位置）</view>
+    <view class="image-grid" style="grid-template-columns: repeat({{selectedTemplate.cols}}, 1fr); grid-template-rows: repeat({{selectedTemplate.rows}}, 1fr);">
+      <view 
+        class="image-cell {{item.image ? 'has-image' : ''}} {{dragIndex === index ? 'dragging' : ''}}"
+        wx:for="{{imageList}}" 
+        wx:for-item="item"
+        wx:key="index"
+        data-index="{{index}}"
+        bind:tap="selectImage"
+        bind:touchstart="onTouchStart"
+        bind:touchmove="onTouchMove"
+        bind:touchend="onTouchEnd"
+        style="grid-column: {{item.col}}; grid-row: {{item.row}}; grid-column-end: span {{item.colSpan}}; grid-row-end: span {{item.rowSpan}};"
+      >
+        <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="uploaded-image"/>
+        <view wx:else class="upload-placeholder">
+          <t-icon name="add" size="32px" color="#ccc"/>
+          <text class="placeholder-text">点击上传</text>
+        </view>
+        <view wx:if="{{item.image}}" class="remove-btn" catch:tap="removeImage" data-index="{{index}}">
+          <t-icon name="close" size="16px" color="#fff"/>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons" wx:if="{{selectedTemplate.id}}">
+    <t-button 
+      theme="primary" 
+      size="large" 
+      bind:tap="generateCollage"
+      disabled="{{!canGenerate}}"
+      block
+    >生成拼接图</t-button>
+    
+    <t-button 
+      variant="outline" 
+      size="large" 
+      bind:tap="resetImages"
+      style="margin-top: 16rpx;"
+      block
+    >重置图片</t-button>
+  </view>
+
+  <!-- 预览区域 -->
+  <view class="preview-area" wx:if="{{generatedImage}}">
+    <view class="section-title">预览效果</view>
+    <image src="{{generatedImage}}" mode="widthFix" class="preview-image"/>
+    <t-button 
+      theme="success" 
+      size="large" 
+      bind:tap="downloadCollage"
+      icon="download"
+      style="margin-top: 16rpx;"
+      block
+    >下载到相册</t-button>
+  </view>
+
+  <!-- 隐藏的 canvas 用于生成图片 -->
+  <canvas id="collage-canvas" type="2d" style="position: fixed; top: -9999px; left: -9999px; width: 1080px; height: 1080px;"></canvas>
+</view>

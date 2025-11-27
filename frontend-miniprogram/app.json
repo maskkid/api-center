@@ -1,0 +1,40 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/tools/index",
+    "pages/mine/index",
+    "pages/modules/wenan/index",
+    "pages/modules/wenan/detail",
+    "pages/modules/imgtools/index",
+    "pages/modules/linktools/index",
+    "pages/test/navigation-test"
+  ],
+  "window": {
+    "navigationBarTitleText": "工具箱",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#666",
+    "selectedColor": "#0052d9",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/tabbar/home.png",
+        "selectedIconPath": "assets/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/tools/index",
+        "text": "工具箱",
+        "iconPath": "assets/tabbar/tools.png",
+        "selectedIconPath": "assets/tabbar/tools-active.png"
+      }
+    ]
+  },
+  "usingComponents": {
+    "t-icon": "/miniprogram_npm/tdesign-miniprogram/icon/icon"
+  }
+}

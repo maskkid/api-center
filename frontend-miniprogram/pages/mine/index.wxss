@@ -1,0 +1,2 @@
+.container {}
+.card { text-align: center; }

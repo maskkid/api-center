@@ -1,0 +1,14 @@
+<view class="container">
+  <view class="user-card">
+    <t-avatar size="large" />
+    <view class="nickname">Trae</view>
+  </view>
+  <t-cell-group>
+    <t-cell title="关于我们" hover arrow>
+      <t-icon slot="left-icon" name="info-circle" />
+    </t-cell>
+    <t-cell title="意见反馈" hover arrow>
+      <t-icon slot="left-icon" name="chat-bubble-help" />
+    </t-cell>
+  </t-cell-group>
+</view>

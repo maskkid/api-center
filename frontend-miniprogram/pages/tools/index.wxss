@@ -1,0 +1,3 @@
+.container {}
+.grid {}
+.card { text-align: center; }
