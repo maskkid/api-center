@@ -1,6 +1,4 @@
 <view class="container">
-  <view class="title">图片拼接工具</view>
-  <view class="desc">选择模板，上传图片，一键拼接</view>
   
   <!-- 模板选择器 -->
   <view class="template-selector">
@@ -41,14 +39,34 @@
         wx:for-item="item"
         wx:key="index"
         data-index="{{index}}"
-        bind:tap="selectImage"
         bind:touchstart="onTouchStart"
         bind:touchmove="onTouchMove"
         bind:touchend="onTouchEnd"
         style="grid-column: {{item.col}}; grid-row: {{item.row}}; grid-column-end: span {{item.colSpan}}; grid-row-end: span {{item.rowSpan}};"
       >
-        <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="uploaded-image"/>
-        <view wx:else class="upload-placeholder">
+        <movable-area wx:if="{{item.image}}" class="mv-area" scale-area="true">
+          <movable-view 
+            class="mv-view" 
+            direction="all" 
+            scale="true" 
+            scale-min="0.5" 
+            scale-max="3" 
+            scale="{{item.scale}}" 
+            x="{{item.posX}}" 
+            y="{{item.posY}}" 
+            bindchange="onCellPan" 
+            bindscale="onCellScale" 
+            catch:touchstart="onMovableTouchStart" 
+            catch:touchmove="onMovableTouchMove"
+            catch:touchend="onMovableTouchEnd" 
+            bind:longpress="onSwapLongPress"
+            catch:tap="noop"
+            data-index="{{index}}"
+          >
+            <image src="{{item.image}}" mode="aspectFill" class="uploaded-image"/>
+          </movable-view>
+        </movable-area>
+        <view wx:else class="upload-placeholder" bind:tap="selectImage" data-index="{{index}}">
           <t-icon name="add" size="32px" color="#ccc"/>
           <text class="placeholder-text">点击上传</text>
         </view>
@@ -56,6 +74,16 @@
           <t-icon name="close" size="16px" color="#fff"/>
         </view>
       </view>
+    </view>
+    <t-button 
+      variant="outline" 
+      size="large" 
+      bind:tap="batchUploadImages"
+      style="margin-top: 16rpx;"
+      block
+    >批量上传</t-button>
+    <view wx:if="{{dragGhostVisible}}" class="drag-ghost" style="left: {{dragGhostX}}px; top: {{dragGhostY}}px;">
+      <image src="{{dragGhostSrc}}" mode="aspectFill" class="drag-ghost-image"/>
     </view>
   </view>
 

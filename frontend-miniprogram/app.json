@@ -23,8 +23,20 @@
       {
         "pagePath": "pages/home/index",
         "text": "首页",
-        "iconPath": "assets/tabbar/home.png",
-        "selectedIconPath": "assets/tabbar/home-active.png"
+        "iconPath": "assets/tabbar/home-new.png",
+        "selectedIconPath": "assets/tabbar/home-new-active.png"
+      },
+      {
+        "pagePath": "pages/modules/wenan/index",
+        "text": "文案",
+        "iconPath": "assets/tabbar/article.png",
+        "selectedIconPath": "assets/tabbar/article-active.png"
+      },
+      {
+        "pagePath": "pages/modules/imgtools/index",
+        "text": "拼图",
+        "iconPath": "assets/tabbar/pintu-new.png",
+        "selectedIconPath": "assets/tabbar/pintu-new-active.png"
       },
       {
         "pagePath": "pages/tools/index",

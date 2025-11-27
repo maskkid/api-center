@@ -7,7 +7,7 @@ page {
 }
 
 .title {
-  font-size: 48rpx;
+  font-size: 32rpx;
   font-weight: 600;
   margin-bottom: 16rpx;
 }

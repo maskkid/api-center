@@ -41,7 +41,7 @@ app.add_middleware(
 app.include_router(shares.router, prefix="/api/shares", tags=["分享管理"])
 app.include_router(resources.router, prefix="/api/resources", tags=["资源管理"])
 app.include_router(auth.router, prefix="/api/auth", tags=["认证管理"])
-app.include_router(proxy.router, prefix="/api/v1", tags=["代理服务"])
+app.include_router(proxy.router, prefix="/api/proxy", tags=["代理服务"])
 app.include_router(frontend.router, tags=["前端页面"])
 
 

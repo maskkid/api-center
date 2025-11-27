@@ -1,12 +1,4 @@
-const appDomain = 'http://localhost:8002'  // 后端服务地址
-
-function toProxied(url) {
-  if (!appDomain) return url
-  // 使用新的代理接口 - 图片使用专门的图片代理接口
-  const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(url)
-  const endpoint = isImage ? '/api/v1/image' : '/api/v1/proxy'
-  return `${appDomain}${endpoint}?url=${encodeURIComponent(url)}`
-}
+const { buildApiUrl, convertToProxyUrl } = require('../../../utils/index.js')
 
 Page({
   data: {
@@ -73,7 +65,7 @@ Page({
     
     // 调用后端API获取分享详情
     wx.request({
-      url: `${appDomain}/api/shares/shares/code/${shareCode}`,
+      url: buildApiUrl(`/api/shares/shares/code/${shareCode}`),
       method: 'GET',
       data: params,
       success: (res) => {
@@ -86,7 +78,7 @@ Page({
             
             this.setData({
               content: resource.text || '',
-              images: images.map(img => toProxied(img.trim())),
+              images: images.map(img => convertToProxyUrl(img.trim(), 'binary')),
               shareNum: share.share_num || 0,
               downloadNum: share.download_num || 0,
               disabled: disabled || false,

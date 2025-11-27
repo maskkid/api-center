@@ -1,9 +1,5 @@
-const appDomain = ''
-
-function toProxied(url) {
-  if (!appDomain) return url
-  return `${appDomain}/api/v1/gateway/proxy?url=${encodeURIComponent(url)}`
-}
+const utils = require('../../../utils/index.js')
+const { toProxied } = utils
 
 Page({
   data: {
@@ -121,10 +117,19 @@ Page({
     imageList: [],
     generatedImage: '',
     dragIndex: -1,
-    canGenerate: false
+    canGenerate: false,
+    dragGhostVisible: false,
+    dragGhostSrc: '',
+    dragGhostX: 0,
+    dragGhostY: 0
   },
 
   onLoad() {
+    // 设置页面标题
+    wx.setNavigationBarTitle({
+      title: '图片工具'
+    })
+    
     // 默认选择第一个模板
     this.selectTemplate({ currentTarget: { dataset: { template: this.data.templates[0] } } })
   },
@@ -135,7 +140,10 @@ Page({
       ...cell,
       index,
       image: '',
-      tempFilePath: ''
+      tempFilePath: '',
+      posX: 0,
+      posY: 0,
+      scale: 1
     }))
     
     this.setData({
@@ -147,32 +155,47 @@ Page({
   },
 
   selectImage(e) {
-    const index = e.currentTarget.dataset.index
-    const currentImage = this.data.imageList[index]
-    
-    if (currentImage.image) {
-      return // 如果已有图片，不重新选择
+    const startIndex = e.currentTarget.dataset.index
+    const empties = this.data.imageList
+      .map((it, idx) => (!it.image ? idx : -1))
+      .filter(idx => idx !== -1)
+    const remaining = empties.length
+    if (remaining === 0) {
+      wx.showToast({ title: '没有空格子', icon: 'none' })
+      return
     }
-    
     wx.chooseImage({
-      count: 1,
+      count: remaining,
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: (res) => {
-        const tempFilePath = res.tempFilePaths[0]
+        const paths = res.tempFilePaths || []
         const imageList = [...this.data.imageList]
-        imageList[index] = {
-          ...imageList[index],
-          image: tempFilePath,
-          tempFilePath
+        // 以当前点击的格子为起点，按格子顺序填充空位
+        const order = []
+        const total = imageList.length
+        for (let i = 0; i < total; i++) {
+          const idx = (startIndex + i) % total
+          if (!imageList[idx].image) order.push(idx)
         }
-        
+        const useCount = Math.min(paths.length, order.length)
+        if (paths.length > order.length) {
+          wx.showToast({ title: `超过剩余格子，只添加前${useCount}张`, icon: 'none' })
+        }
+        for (let i = 0; i < useCount; i++) {
+          const idx = order[i]
+          const p = paths[i]
+          imageList[idx] = {
+            ...imageList[idx],
+            image: p,
+            tempFilePath: p,
+            posX: 0,
+            posY: 0,
+            scale: 1
+          }
+        }
         const canGenerate = imageList.every(item => item.image)
-        
-        this.setData({
-          imageList,
-          canGenerate
-        })
+        this.setData({ imageList, canGenerate })
       }
     })
   },
@@ -183,7 +206,10 @@ Page({
     imageList[index] = {
       ...imageList[index],
       image: '',
-      tempFilePath: ''
+      tempFilePath: '',
+      posX: 0,
+      posY: 0,
+      scale: 1
     }
     
     this.setData({
@@ -196,13 +222,54 @@ Page({
     const imageList = this.data.imageList.map(item => ({
       ...item,
       image: '',
-      tempFilePath: ''
+      tempFilePath: '',
+      posX: 0,
+      posY: 0,
+      scale: 1
     }))
     
     this.setData({
       imageList,
       generatedImage: '',
       canGenerate: false
+    })
+  },
+
+  batchUploadImages() {
+    const emptyIndexes = this.data.imageList
+      .map((it, idx) => (!it.image ? idx : -1))
+      .filter(idx => idx !== -1)
+    const remaining = emptyIndexes.length
+    if (remaining === 0) {
+      wx.showToast({ title: '没有空格子', icon: 'none' })
+      return
+    }
+    wx.chooseImage({
+      count: 9,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const paths = res.tempFilePaths || []
+        const useCount = Math.min(paths.length, remaining)
+        if (paths.length > remaining) {
+          wx.showToast({ title: `超过剩余格子，只添加前${useCount}张`, icon: 'none' })
+        }
+        const imageList = [...this.data.imageList]
+        for (let i = 0; i < useCount; i++) {
+          const idx = emptyIndexes[i]
+          const p = paths[i]
+          imageList[idx] = {
+            ...imageList[idx],
+            image: p,
+            tempFilePath: p,
+            posX: 0,
+            posY: 0,
+            scale: 1
+          }
+        }
+        const canGenerate = imageList.every(item => item.image)
+        this.setData({ imageList, canGenerate })
+      }
     })
   },
 
@@ -214,10 +281,24 @@ Page({
     // 记录触摸起始位置
     this.startX = e.touches[0].clientX
     this.startY = e.touches[0].clientY
+
+    const item = this.data.imageList[index]
+    if (!this.panZoomActive && item && item.image) {
+      this.setData({
+        dragGhostVisible: true,
+        dragGhostSrc: item.image,
+        dragGhostX: this.startX,
+        dragGhostY: this.startY
+      })
+    }
   },
 
   onTouchMove(e) {
-    // 这里可以实现拖拽时的视觉反馈
+    if (this.data.dragGhostVisible) {
+      const x = e.touches[0].clientX
+      const y = e.touches[0].clientY
+      this.setData({ dragGhostX: x, dragGhostY: y })
+    }
   },
 
   onTouchEnd(e) {
@@ -234,7 +315,7 @@ Page({
     
     // 如果移动距离太小，认为是点击
     if (deltaX < 30 && deltaY < 30) {
-      this.setData({ dragIndex: -1 })
+      this.setData({ dragIndex: -1, dragGhostVisible: false })
       return
     }
     
@@ -254,20 +335,136 @@ Page({
       if (targetIndex !== -1) {
         // 交换图片
         const imageList = [...this.data.imageList]
-        const dragImage = imageList[dragIndex].image
-        const dragTempPath = imageList[dragIndex].tempFilePath
-        
-        imageList[dragIndex].image = imageList[targetIndex].image
-        imageList[dragIndex].tempFilePath = imageList[targetIndex].tempFilePath
-        imageList[targetIndex].image = dragImage
-        imageList[targetIndex].tempFilePath = dragTempPath
+        const a = imageList[dragIndex]
+        const b = imageList[targetIndex]
+        const ai = a.image
+        const at = a.tempFilePath
+        const apx = a.posX
+        const apy = a.posY
+        const as = a.scale
+        imageList[dragIndex].image = b.image
+        imageList[dragIndex].tempFilePath = b.tempFilePath
+        imageList[dragIndex].posX = b.posX
+        imageList[dragIndex].posY = b.posY
+        imageList[dragIndex].scale = b.scale
+        imageList[targetIndex].image = ai
+        imageList[targetIndex].tempFilePath = at
+        imageList[targetIndex].posX = apx
+        imageList[targetIndex].posY = apy
+        imageList[targetIndex].scale = as
         
         this.setData({ imageList })
       }
       
-      this.setData({ dragIndex: -1 })
+      this.setData({ dragIndex: -1, dragGhostVisible: false })
     }).exec()
   },
+
+  onCellPan(e) {
+    const index = e.currentTarget.dataset.index
+    const { x, y } = e.detail
+    const imageList = [...this.data.imageList]
+    // 获取当前图片的缩放值
+    const currentScale = imageList[index].scale || 1
+    // 计算边界限制，防止图片完全拖出格子
+    const maxOffset = 200 // 最大偏移量限制
+    const clampedX = Math.max(-maxOffset, Math.min(maxOffset, x))
+    const clampedY = Math.max(-maxOffset, Math.min(maxOffset, y))
+    imageList[index].posX = clampedX
+    imageList[index].posY = clampedY
+    this.setData({ imageList })
+  },
+
+  onCellScale(e) {
+    const index = e.currentTarget.dataset.index
+    const { scale } = e.detail
+    const imageList = [...this.data.imageList]
+    // 确保缩放值在合理范围内
+    const clampedScale = Math.max(0.5, Math.min(3, scale))
+    imageList[index].scale = clampedScale
+    this.setData({ imageList })
+  },
+
+  onMovableTouchStart(e) {
+    this.panZoomActive = true
+    if (e && e.touches && e.touches[0]) {
+      this.startX = e.touches[0].clientX
+      this.startY = e.touches[0].clientY
+      this._lastTouchX = this.startX
+      this._lastTouchY = this.startY
+    }
+  },
+
+  onMovableTouchMove(e) {
+    if (e && e.touches && e.touches[0]) {
+      this._lastTouchX = e.touches[0].clientX
+      this._lastTouchY = e.touches[0].clientY
+      if (this.data.dragGhostVisible) {
+        this.setData({ dragGhostX: this._lastTouchX, dragGhostY: this._lastTouchY })
+      }
+    }
+  },
+
+  onMovableTouchEnd() {
+    this.panZoomActive = false
+    if (this.data.dragGhostVisible) {
+      const endX = this._lastTouchX || 0
+      const endY = this._lastTouchY || 0
+      const dragIndex = this.data.dragIndex
+      if (dragIndex === -1) {
+        this.setData({ dragGhostVisible: false })
+        return
+      }
+      const query = wx.createSelectorQuery().in(this)
+      query.selectAll('.image-cell').boundingClientRect((rects) => {
+        let targetIndex = -1
+        rects.forEach((rect, index) => {
+          if (index !== dragIndex && endX >= rect.left && endX <= rect.right && endY >= rect.top && endY <= rect.bottom) {
+            targetIndex = index
+          }
+        })
+        if (targetIndex !== -1) {
+          const imageList = [...this.data.imageList]
+          const a = imageList[dragIndex]
+          const b = imageList[targetIndex]
+          const ai = a.image
+          const at = a.tempFilePath
+          const apx = a.posX
+          const apy = a.posY
+          const as = a.scale
+          imageList[dragIndex].image = b.image
+          imageList[dragIndex].tempFilePath = b.tempFilePath
+          imageList[dragIndex].posX = b.posX
+          imageList[dragIndex].posY = b.posY
+          imageList[dragIndex].scale = b.scale
+          imageList[targetIndex].image = ai
+          imageList[targetIndex].tempFilePath = at
+          imageList[targetIndex].posX = apx
+          imageList[targetIndex].posY = apy
+          imageList[targetIndex].scale = as
+          this.setData({ imageList })
+        }
+        this.setData({ dragIndex: -1, dragGhostVisible: false })
+      }).exec()
+    }
+  },
+
+  onSwapLongPress(e) {
+    const index = e.currentTarget.dataset.index
+    const item = this.data.imageList[index]
+    if (!item || !item.image) return
+    const x = this._lastTouchX || 0
+    const y = this._lastTouchY || 0
+    this.setData({
+      dragIndex: index,
+      dragGhostVisible: true,
+      dragGhostSrc: item.image,
+      dragGhostX: x,
+      dragGhostY: y
+    })
+  },
+
+  noop() {},
 
   // 生成拼接图
   async generateCollage() {
@@ -282,10 +479,12 @@ Page({
       const cellWidth = canvasWidth / selectedTemplate.cols
       const cellHeight = canvasHeight / selectedTemplate.rows
       
-      // 创建 canvas 上下文
-      const query = wx.createSelectorQuery()
-      query.select('#collage-canvas').fields({ node: true, size: true }).exec((res) => {
-        const canvas = res[0].node
+      const query = wx.createSelectorQuery().in(this)
+      query.selectAll('.image-cell').boundingClientRect()
+      query.select('#collage-canvas').fields({ node: true, size: true })
+      query.exec((ret) => {
+        const rects = ret[0]
+        const canvas = ret[1].node
         const ctx = canvas.getContext('2d')
         
         // 设置 canvas 尺寸
@@ -328,34 +527,64 @@ Page({
             const y = (item.row - 1) * cellHeight
             const width = item.colSpan * cellWidth
             const height = item.rowSpan * cellHeight
+            const rect = rects[index]
+            const rx = rect && rect.width ? (width / rect.width) : 1
+            const ry = rect && rect.height ? (height / rect.height) : 1
+            // 计算偏移量和缩放 - 修正坐标系转换
+            const scaleRatio = item.scale
+            const offX = item.posX * rx
+            const offY = item.posY * ry
             
             // 根据模板ID添加特殊形状效果
             if (selectedTemplate.id === 5) {
               // 梯形布局 - 添加圆角和特殊裁剪
+              const padding = 10
+              const drawWidth = width - padding * 2
+              const drawHeight = height - padding * 2
+              
               ctx.save()
-              roundRect(ctx, x + 10, y + 10, width - 20, height - 20, 20)
+              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 20)
               ctx.clip()
-              ctx.drawImage(img, x + 10, y + 10, width - 20, height - 20)
+              
+              // 计算缩放后的绘制尺寸
+              const scaledWidth = drawWidth / scaleRatio
+              const scaledHeight = drawHeight / scaleRatio
+              
+              ctx.save()
+              ctx.translate(x + padding + offX, y + padding + offY)
+              ctx.drawImage(img, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight)
+              ctx.restore()
               ctx.restore()
               
               // 添加边框
               ctx.strokeStyle = '#ffffff'
               ctx.lineWidth = 6
-              roundRect(ctx, x + 10, y + 10, width - 20, height - 20, 20)
+              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 20)
               ctx.stroke()
             } else {
               // 普通布局 - 添加圆角和边框
               const padding = 8
+              const drawWidth = width - padding * 2
+              const drawHeight = height - padding * 2
+              
               ctx.save()
-              roundRect(ctx, x + padding, y + padding, width - padding * 2, height - padding * 2, 12)
+              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 12)
               ctx.clip()
-              ctx.drawImage(img, x + padding, y + padding, width - padding * 2, height - padding * 2)
+              
+              // 计算缩放后的绘制尺寸
+              const scaledWidth = drawWidth / scaleRatio
+              const scaledHeight = drawHeight / scaleRatio
+              
+              ctx.save()
+              ctx.translate(x + padding + offX, y + padding + offY)
+              ctx.drawImage(img, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight)
+              ctx.restore()
               ctx.restore()
               
               // 添加边框
               ctx.strokeStyle = '#ffffff'
               ctx.lineWidth = 4
-              roundRect(ctx, x + padding, y + padding, width - padding * 2, height - padding * 2, 12)
+              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 12)
               ctx.stroke()
             }
             

@@ -1,12 +1,5 @@
-const appDomain = 'http://localhost:8001'  // 后端服务地址
-
-function toProxied(url) {
-  if (!appDomain) return url
-  // 使用新的代理接口 - 图片使用专门的图片代理接口
-  const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(url)
-  const endpoint = isImage ? '/api/v1/image' : '/api/v1/proxy'
-  return `${appDomain}${endpoint}?url=${encodeURIComponent(url)}&response_type=binary`
-}
+const utils = require('../../../utils/index.js')
+const { toProxied, config } = utils
 
 Page({
   data: {
@@ -15,6 +8,15 @@ Page({
     pageSize: 10,
     hasMore: true,
     loading: false
+  },
+  
+  onLoad() {
+    // 设置页面标题
+    wx.setNavigationBarTitle({
+      title: '文案库'
+    })
+    
+    this.loadShares()
   },
   async onOneClickDownload(e) {
     const text = e.currentTarget.dataset.text
@@ -82,7 +84,7 @@ Page({
     this.setData({ loading: true })
     
     wx.request({
-      url: `${appDomain}/api/shares/shares`,
+      url: `${config.appDomain}${config.apiUrls.shares.list}`,
       method: 'GET',
       data: {
         page: page,
