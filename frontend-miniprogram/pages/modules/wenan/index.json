@@ -1,5 +1,7 @@
 {
   "usingComponents": {
     "t-button": "/miniprogram_npm/tdesign-miniprogram/button/button"
-  }
+  },
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50
 }

@@ -1,13 +1,20 @@
-const appDomain = ''
+const appDomain = 'http://localhost:8001'  // 后端服务地址
 
 function toProxied(url) {
   if (!appDomain) return url
-  return `${appDomain}/api/v1/gateway/proxy?url=${encodeURIComponent(url)}`
+  // 使用新的代理接口 - 图片使用专门的图片代理接口
+  const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(url)
+  const endpoint = isImage ? '/api/v1/image' : '/api/v1/proxy'
+  return `${appDomain}${endpoint}?url=${encodeURIComponent(url)}&response_type=binary`
 }
 
 Page({
   data: {
-    items: []
+    items: [],
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
   async onOneClickDownload(e) {
     const text = e.currentTarget.dataset.text
@@ -51,7 +58,85 @@ Page({
       }
     }
   },
-  onLoad() {
+  async onLoad() {
+    // 初始化加载第一页数据
+    await this.loadShares(1)
+  },
+  
+  async onReachBottom() {
+    // 下拉加载更多
+    if (this.data.hasMore && !this.data.loading) {
+      await this.loadShares(this.data.page + 1)
+    }
+  },
+  
+  onPullDownRefresh() {
+    // 上拉刷新
+    this.loadShares(1, true)
+    wx.stopPullDownRefresh()
+  },
+  
+  loadShares(page = 1, refresh = false) {
+    if (this.data.loading) return
+    
+    this.setData({ loading: true })
+    
+    wx.request({
+      url: `${appDomain}/api/shares/shares`,
+      method: 'GET',
+      data: {
+        page: page,
+        page_size: this.data.pageSize
+      },
+      success: (res) => {
+        if (res.statusCode === 200 && res.data && res.data.items) {
+          // 转换后端数据格式
+          const newItems = res.data.items.map(item => {
+            const resource = item.resource
+            const share = item.share
+            const images = resource.image ? resource.image.split(',').filter(img => img.trim()) : []
+            
+            return {
+              id: resource.res_id,
+              text: resource.text || '',
+              images: images.map(img => toProxied(img.trim())),
+              shareCode: share.share_code,
+              shareNum: share.share_num || 0,
+              downloadNum: share.download_num || 0
+            }
+          })
+          
+          let items = []
+          if (refresh) {
+            items = newItems
+          } else {
+            items = page === 1 ? newItems : [...this.data.items, ...newItems]
+          }
+          
+          this.setData({ 
+            items: items,
+            page: page,
+            hasMore: newItems.length === this.data.pageSize,
+            loading: false
+          })
+        } else {
+          console.error('API返回数据格式错误:', res)
+          // 如果API调用失败，使用示例数据
+          this.loadDemoData()
+        }
+      },
+      fail: (error) => {
+        console.error('获取分享列表失败:', error)
+        this.setData({ loading: false })
+        // 使用示例数据作为fallback
+        if (page === 1) {
+          this.loadDemoData()
+        }
+      }
+    })
+  },
+  
+  loadDemoData() {
     const demo = [
       {
         id: 1,
@@ -91,6 +176,14 @@ Page({
           await wx.saveImageToPhotosAlbum({ filePath: dl.tempFilePath })
         }
       } catch (err) {}
+    }
+  },
+  onNavigateToDetail(e) {
+    const shareCode = e.currentTarget.dataset.shareCode
+    if (shareCode) {
+      wx.navigateTo({
+        url: `/pages/modules/wenan/detail?share_code=${shareCode}`
+      })
     }
   }
 })

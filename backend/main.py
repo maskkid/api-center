@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 
-from routes import shares, resources, auth, frontend
+from routes import shares, resources, auth, frontend, proxy
 from config import config
 from database import engine, Base
 
@@ -41,6 +41,7 @@ app.add_middleware(
 app.include_router(shares.router, prefix="/api/shares", tags=["分享管理"])
 app.include_router(resources.router, prefix="/api/resources", tags=["资源管理"])
 app.include_router(auth.router, prefix="/api/auth", tags=["认证管理"])
+app.include_router(proxy.router, prefix="/api/v1", tags=["代理服务"])
 app.include_router(frontend.router, tags=["前端页面"])
 
 
@@ -64,6 +65,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=True
     )

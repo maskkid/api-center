@@ -61,3 +61,49 @@
   font-size: 28rpx;
   text-align: center;
 }
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 32rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 分享信息 */
+.share-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  margin-bottom: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.share-code {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.share-stats {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 禁用状态提示 */
+.disabled-notice {
+  background: #fff3cd;
+  border: 1rpx solid #ffeaa7;
+  border-radius: 8rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.disabled-notice text {
+  color: #856404;
+  font-size: 28rpx;
+}

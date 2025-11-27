@@ -1,36 +1,124 @@
+const appDomain = 'http://localhost:8002'  // 后端服务地址
+
+function toProxied(url) {
+  if (!appDomain) return url
+  // 使用新的代理接口 - 图片使用专门的图片代理接口
+  const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(url)
+  const endpoint = isImage ? '/api/v1/image' : '/api/v1/proxy'
+  return `${appDomain}${endpoint}?url=${encodeURIComponent(url)}`
+}
+
 Page({
   data: {
     content: '',
-    images: []
+    images: [],
+    shareCode: '',
+    shareNum: 0,
+    downloadNum: 0,
+    disabled: false,
+    loading: true
   },
 
   onLoad(options) {
-    // 接收从其他小程序或网页跳转传入的参数
-    const { content, images } = options
+    // 获取分享码参数
+    const { share_code } = options
     
-    if (content) {
-      // 解码URL参数
-      const decodedContent = decodeURIComponent(content)
-      this.setData({ content: decodedContent })
-    }
-    
-    if (images) {
-      // 处理图片参数，可能是逗号分隔的字符串或JSON字符串
-      try {
-        // 尝试解析为JSON数组
-        const imageArray = JSON.parse(decodeURIComponent(images))
-        this.setData({ images: imageArray })
-      } catch (e) {
-        // 如果不是JSON，尝试按逗号分割
-        const imageArray = decodeURIComponent(images).split(',').filter(img => img.trim())
-        this.setData({ images: imageArray })
+    if (share_code) {
+      this.setData({ shareCode: share_code })
+      this.loadShareDetail(share_code)
+    } else {
+      // 兼容旧参数格式
+      const { content, images } = options
+      
+      if (content) {
+        // 解码URL参数
+        const decodedContent = decodeURIComponent(content)
+        this.setData({ content: decodedContent })
       }
+      
+      if (images) {
+        // 处理图片参数，可能是逗号分隔的字符串或JSON字符串
+        try {
+          // 尝试解析为JSON数组
+          const imageArray = JSON.parse(decodeURIComponent(images))
+          this.setData({ images: imageArray })
+        } catch (e) {
+          // 如果不是JSON，尝试按逗号分割
+          const imageArray = decodeURIComponent(images).split(',').filter(img => img.trim())
+          this.setData({ images: imageArray })
+        }
+      }
+      
+      this.setData({ loading: false })
     }
     
     // 设置页面标题
     wx.setNavigationBarTitle({
       title: '文案详情'
     })
+  },
+  
+  loadShareDetail(shareCode) {
+    // 获取当前页面的channel参数（如果有）
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const options = currentPage.options
+    const channel = options.channel || ''
+    
+    // 构建请求参数
+    const params = {}
+    if (channel) {
+      params.channel = channel
+    }
+    
+    // 调用后端API获取分享详情
+    wx.request({
+      url: `${appDomain}/api/shares/shares/code/${shareCode}`,
+      method: 'GET',
+      data: params,
+      success: (res) => {
+        if (res.statusCode === 200 && res.data) {
+          const { resource, share, disabled } = res.data
+          
+          if (resource && share) {
+            // 处理图片数据
+            const images = resource.image ? resource.image.split(',').filter(img => img.trim()) : []
+            
+            this.setData({
+              content: resource.text || '',
+              images: images.map(img => toProxied(img.trim())),
+              shareNum: share.share_num || 0,
+              downloadNum: share.download_num || 0,
+              disabled: disabled || false,
+              loading: false
+            })
+          } else {
+            this.handleLoadError(new Error('数据格式错误'))
+          }
+        } else {
+          this.handleLoadError(new Error(res.data?.detail || '获取分享详情失败'))
+        }
+      },
+      fail: (error) => {
+        console.error('获取分享详情失败:', error)
+        this.handleLoadError(error)
+      }
+    })
+  },
+  
+  handleLoadError(error) {
+    // 显示错误提示
+    wx.showToast({
+      title: error.message || '获取分享详情失败',
+      icon: 'error'
+    })
+    
+    this.setData({ loading: false })
+    
+    // 如果获取失败，返回上一页
+    setTimeout(() => {
+      wx.navigateBack()
+    }, 2000)
   },
 
   // 预览图片

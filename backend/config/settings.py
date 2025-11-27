@@ -23,7 +23,7 @@ class AppConfig:
 
     # 服务器配置
     host: str = os.getenv("HOST", "0.0.0.0")
-    port: int = int(os.getenv("PORT", "8000"))
+    port: int = int(os.getenv("PORT", "8001"))
     cors_origins: list[str] = field(default_factory=lambda: os.getenv("CORS_ORIGINS", "*").split(","))
 
     @property

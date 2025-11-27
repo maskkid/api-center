@@ -1,11 +1,33 @@
 <view class="container">
-  <view class="wenan-detail-card">
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text>加载中...</text>
+  </view>
+  
+  <!-- 内容区域 -->
+  <view wx:else class="wenan-detail-card">
+    <!-- 分享信息 -->
+    <view class="share-info" wx:if="{{shareCode}}">
+      <text class="share-code">分享码：{{shareCode}}</text>
+      <text class="share-stats">分享{{shareNum}} · 下载{{downloadNum}}</text>
+    </view>
+    
+    <!-- 禁用状态提示 -->
+    <view wx:if="{{disabled}}" class="disabled-notice">
+      <text>该分享已失效</text>
+    </view>
+    
+    <!-- 文案内容 -->
     <view class="content-text">{{content}}</view>
+    
+    <!-- 图片网格 -->
     <view class="image-grid" wx:if="{{images && images.length > 0}}">
       <block wx:for="{{images}}" wx:key="src">
         <image src="{{item}}" mode="aspectFill" bind:tap="onPreviewImage" data-src="{{item}}" />
       </block>
     </view>
+    
+    <!-- 操作按钮 -->
     <view class="actions">
       <t-button
         t-class="action-button"
@@ -13,6 +35,7 @@
         size="large"
         icon="download"
         bind:tap="onOneClickDownload"
+        disabled="{{disabled}}"
         block
       >一键下载</t-button>
     </view>

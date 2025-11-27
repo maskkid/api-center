@@ -1,10 +1,10 @@
 <view class="container">
   <block wx:for="{{items}}" wx:key="id">
-    <view class="wenan-card">
-      <view>{{item.text}}</view>
+    <view class="wenan-card" bind:tap="onNavigateToDetail" data-share-code="{{item.shareCode}}">
+      <view class="wenan-content">{{item.text}}</view>
       <view class="image-grid">
-        <block wx:for="{{item.images}}" wx:key="src">
-          <image src="{{item}}" mode="aspectFill" bind:tap="onPreviewImage" data-src="{{item}}" />
+        <block wx:for="{{item.images}}" wx:for-item="image" wx:key="src">
+          <image src="{{image}}" mode="aspectFill" bind:tap="onPreviewImage" data-src="{{image}}" />
         </block>
       </view>
       <view class="actions">
@@ -19,4 +19,10 @@
       </view>
     </view>
   </block>
+  <view wx:if="{{loading}}" class="loading-more">
+    <text>加载中...</text>
+  </view>
+  <view wx:if="{{!hasMore && items.length > 0}}" class="no-more-data">
+    <text>没有更多数据了</text>
+  </view>
 </view>
