@@ -364,14 +364,8 @@ Page({
     const index = e.currentTarget.dataset.index
     const { x, y } = e.detail
     const imageList = [...this.data.imageList]
-    // 获取当前图片的缩放值
-    const currentScale = imageList[index].scale || 1
-    // 计算边界限制，防止图片完全拖出格子
-    const maxOffset = 200 // 最大偏移量限制
-    const clampedX = Math.max(-maxOffset, Math.min(maxOffset, x))
-    const clampedY = Math.max(-maxOffset, Math.min(maxOffset, y))
-    imageList[index].posX = clampedX
-    imageList[index].posY = clampedY
+    imageList[index].posX = x
+    imageList[index].posY = y
     this.setData({ imageList })
   },
 
@@ -385,83 +379,27 @@ Page({
     this.setData({ imageList })
   },
 
-  onMovableTouchStart(e) {
-    this.panZoomActive = true
-    if (e && e.touches && e.touches[0]) {
-      this.startX = e.touches[0].clientX
-      this.startY = e.touches[0].clientY
-      this._lastTouchX = this.startX
-      this._lastTouchY = this.startY
-    }
-  },
+  // 移除图片内的自定义拖动，改用 movable-view 的 x/y
 
-  onMovableTouchMove(e) {
-    if (e && e.touches && e.touches[0]) {
-      this._lastTouchX = e.touches[0].clientX
-      this._lastTouchY = e.touches[0].clientY
-      if (this.data.dragGhostVisible) {
-        this.setData({ dragGhostX: this._lastTouchX, dragGhostY: this._lastTouchY })
-      }
-    }
-  },
-
-  onMovableTouchEnd() {
-    this.panZoomActive = false
-    if (this.data.dragGhostVisible) {
-      const endX = this._lastTouchX || 0
-      const endY = this._lastTouchY || 0
-      const dragIndex = this.data.dragIndex
-      if (dragIndex === -1) {
-        this.setData({ dragGhostVisible: false })
-        return
-      }
-      const query = wx.createSelectorQuery().in(this)
-      query.selectAll('.image-cell').boundingClientRect((rects) => {
-        let targetIndex = -1
-        rects.forEach((rect, index) => {
-          if (index !== dragIndex && endX >= rect.left && endX <= rect.right && endY >= rect.top && endY <= rect.bottom) {
-            targetIndex = index
-          }
-        })
-        if (targetIndex !== -1) {
-          const imageList = [...this.data.imageList]
-          const a = imageList[dragIndex]
-          const b = imageList[targetIndex]
-          const ai = a.image
-          const at = a.tempFilePath
-          const apx = a.posX
-          const apy = a.posY
-          const as = a.scale
-          imageList[dragIndex].image = b.image
-          imageList[dragIndex].tempFilePath = b.tempFilePath
-          imageList[dragIndex].posX = b.posX
-          imageList[dragIndex].posY = b.posY
-          imageList[dragIndex].scale = b.scale
-          imageList[targetIndex].image = ai
-          imageList[targetIndex].tempFilePath = at
-          imageList[targetIndex].posX = apx
-          imageList[targetIndex].posY = apy
-          imageList[targetIndex].scale = as
-          this.setData({ imageList })
-        }
-        this.setData({ dragIndex: -1, dragGhostVisible: false })
-      }).exec()
-    }
-  },
+  // 已移除 movable-view 的触摸钩子，避免与缩放手势冲突
 
   onSwapLongPress(e) {
     const index = e.currentTarget.dataset.index
     const item = this.data.imageList[index]
     if (!item || !item.image) return
-    const x = this._lastTouchX || 0
-    const y = this._lastTouchY || 0
-    this.setData({
-      dragIndex: index,
-      dragGhostVisible: true,
-      dragGhostSrc: item.image,
-      dragGhostX: x,
-      dragGhostY: y
-    })
+    const query = wx.createSelectorQuery().in(this)
+    query.selectAll('.image-cell').boundingClientRect((rects) => {
+      const rect = rects && rects[index]
+      const cx = rect ? (rect.left + rect.width / 2) : 0
+      const cy = rect ? (rect.top + rect.height / 2) : 0
+      this.setData({
+        dragIndex: index,
+        dragGhostVisible: true,
+        dragGhostSrc: item.image,
+        dragGhostX: cx,
+        dragGhostY: cy
+      })
+    }).exec()
   },
 
   noop() {},
@@ -528,63 +466,47 @@ Page({
             const width = item.colSpan * cellWidth
             const height = item.rowSpan * cellHeight
             const rect = rects[index]
-            const rx = rect && rect.width ? (width / rect.width) : 1
-            const ry = rect && rect.height ? (height / rect.height) : 1
-            // 计算偏移量和缩放 - 修正坐标系转换
-            const scaleRatio = item.scale
-            const offX = item.posX * rx
-            const offY = item.posY * ry
+            const padding = selectedTemplate.id === 5 ? 10 : 8
+            const areaW = width - padding * 2
+            const areaH = height - padding * 2
+            const rx = rect && rect.width ? (areaW / rect.width) : 1
+            const ry = rect && rect.height ? (areaH / rect.height) : 1
+            const offX = (item.posX || 0) * rx
+            const offY = (item.posY || 0) * ry
+            const scaleRatio = item.scale || 1
             
-            // 根据模板ID添加特殊形状效果
+            // 按 aspectFill 计算绘制尺寸，保持不变形
+            const imgW = img.width || areaW
+            const imgH = img.height || areaH
+            const baseScale = Math.max(areaW / imgW, areaH / imgH)
+            const s = baseScale * scaleRatio
+            const drawW = imgW * s
+            const drawH = imgH * s
+            // 初始居中，再叠加用户位移（从容器坐标到画布坐标）
+            const baseX = x + padding + (areaW - drawW) / 2
+            const baseY = y + padding + (areaH - drawH) / 2
+            const drawX = baseX + offX
+            const drawY = baseY + offY
+
             if (selectedTemplate.id === 5) {
-              // 梯形布局 - 添加圆角和特殊裁剪
-              const padding = 10
-              const drawWidth = width - padding * 2
-              const drawHeight = height - padding * 2
-              
               ctx.save()
-              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 20)
+              roundRect(ctx, x + padding, y + padding, areaW, areaH, 20)
               ctx.clip()
-              
-              // 计算缩放后的绘制尺寸
-              const scaledWidth = drawWidth / scaleRatio
-              const scaledHeight = drawHeight / scaleRatio
-              
-              ctx.save()
-              ctx.translate(x + padding + offX, y + padding + offY)
-              ctx.drawImage(img, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight)
+              ctx.drawImage(img, drawX, drawY, drawW, drawH)
               ctx.restore()
-              ctx.restore()
-              
-              // 添加边框
               ctx.strokeStyle = '#ffffff'
               ctx.lineWidth = 6
-              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 20)
+              roundRect(ctx, x + padding, y + padding, areaW, areaH, 20)
               ctx.stroke()
             } else {
-              // 普通布局 - 添加圆角和边框
-              const padding = 8
-              const drawWidth = width - padding * 2
-              const drawHeight = height - padding * 2
-              
               ctx.save()
-              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 12)
+              roundRect(ctx, x + padding, y + padding, areaW, areaH, 12)
               ctx.clip()
-              
-              // 计算缩放后的绘制尺寸
-              const scaledWidth = drawWidth / scaleRatio
-              const scaledHeight = drawHeight / scaleRatio
-              
-              ctx.save()
-              ctx.translate(x + padding + offX, y + padding + offY)
-              ctx.drawImage(img, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight)
+              ctx.drawImage(img, drawX, drawY, drawW, drawH)
               ctx.restore()
-              ctx.restore()
-              
-              // 添加边框
               ctx.strokeStyle = '#ffffff'
               ctx.lineWidth = 4
-              roundRect(ctx, x + padding, y + padding, drawWidth, drawHeight, 12)
+              roundRect(ctx, x + padding, y + padding, areaW, areaH, 12)
               ctx.stroke()
             }
             
@@ -595,6 +517,10 @@ Page({
                 canvas,
                 success: (res) => {
                   this.setData({ generatedImage: res.tempFilePath })
+                  // 生成后自动滚动到预览区域
+                  wx.nextTick(() => {
+                    wx.pageScrollTo({ selector: '#preview-anchor', duration: 300 })
+                  })
                   wx.hideLoading()
                   wx.showToast({ title: '生成成功', icon: 'success' })
                 },

@@ -48,22 +48,26 @@
           <movable-view 
             class="mv-view" 
             direction="all" 
+            out-of-bounds="true"
+            inertia="true"
             scale="true" 
             scale-min="0.5" 
             scale-max="3" 
-            scale="{{item.scale}}" 
-            x="{{item.posX}}" 
-            y="{{item.posY}}" 
-            bindchange="onCellPan" 
+            scale-value="{{item.scale}}" 
+            x="{{item.posX}}"
+            y="{{item.posY}}"
+            bindchange="onCellPan"
             bindscale="onCellScale" 
-            catch:touchstart="onMovableTouchStart" 
-            catch:touchmove="onMovableTouchMove"
-            catch:touchend="onMovableTouchEnd" 
             bind:longpress="onSwapLongPress"
             catch:tap="noop"
             data-index="{{index}}"
           >
-            <image src="{{item.image}}" mode="aspectFill" class="uploaded-image"/>
+            <image 
+              src="{{item.image}}" 
+              mode="aspectFill" 
+              class="uploaded-image"
+              data-index="{{index}}"
+            />
           </movable-view>
         </movable-area>
         <view wx:else class="upload-placeholder" bind:tap="selectImage" data-index="{{index}}">
@@ -106,6 +110,8 @@
     >重置图片</t-button>
   </view>
 
+  <!-- 预览锚点 -->
+  <view id="preview-anchor"></view>
   <!-- 预览区域 -->
   <view class="preview-area" wx:if="{{generatedImage}}">
     <view class="section-title">预览效果</view>
